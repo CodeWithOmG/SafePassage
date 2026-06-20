@@ -1,0 +1,38 @@
+# Dependency directories
+node_modules/
+.pub_cache/
+.dart_tool/
+build/
+
+# Compiled/Build files
+*.exe
+*.dll
+*.so
+*.dylib
+*.class
+*.pyc
+
+# Flutter/Dart specific
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+mobile/.metadata
+mobile/.flutter-plugins
+mobile/.flutter-plugins-dependencies
+mobile/build/
+mobile/.dart_tool/
+
+# Databases & Runtime data
+backend/database.json
+
+# IDEs and editors
+.idea/
+*.iml
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# Operating System Files
+Thumbs.db
+Desktop.ini
+.DS_Store

@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Guardian Path Navigator - Frontend Hub</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        background: "#0b1326",
+                        surface: "#171f33",
+                        primary: "#6366f1",
+                        secondary: "#4edea3",
+                        accent: "#c0c1ff",
+                        "on-surface": "#dae2fd",
+                        "on-surface-variant": "#c7c4d7"
+                    },
+                    fontFamily: {
+                        sans: ["Inter", "sans-serif"]
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #0b1326;
+            color: #dae2fd;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+        .glass-card:hover {
+            border-color: rgba(99, 102, 241, 0.3);
+            box-shadow: 0 8px 32px 0 rgba(99, 102, 241, 0.1);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col font-sans relative overflow-x-hidden antialiased">
+    <!-- Atmospheric Background Glows -->
+    <div class="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full bg-primary/10 blur-[120px] pointer-events-none"></div>
+    <div class="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] rounded-full bg-secondary/5 blur-[120px] pointer-events-none"></div>
+
+    <!-- Top Navigation Header -->
+    <header class="w-full z-50 bg-background/80 backdrop-blur-xl border-b border-white/5 flex justify-between items-center px-8 h-20">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center border border-primary/30">
+                <span class="material-symbols-outlined text-accent">shield</span>
+            </div>
+            <div>
+                <h1 class="text-xl font-bold text-accent tracking-wide">Guardian Path Navigator</h1>
+                <p class="text-xs text-on-surface-variant/60 font-medium">Stitch Project ID: 1017779728461991852</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-4">
+            <span class="text-xs px-3 py-1.5 rounded-full bg-secondary/15 text-secondary border border-secondary/20 font-semibold uppercase tracking-wider">Connected to Stitch</span>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="flex-grow max-w-7xl mx-auto w-full px-8 py-12 flex flex-col gap-10">
+        <!-- Hero Welcome Section -->
+        <div class="glass-card rounded-2xl p-8 md:p-12 flex flex-col md:flex-row justify-between items-start md:items-center gap-8 relative overflow-hidden">
+            <div class="z-10 max-w-2xl">
+                <h2 class="text-3xl md:text-4xl font-bold text-on-surface mb-4">Your SafePassage Frontend is Ready</h2>
+                <p class="text-on-surface-variant leading-relaxed text-lg">
+                    We've fetched your frontend designs directly from Stitch and generated clean, fully responsive single-page applications. They are themed using the <strong>Empowered Calm</strong> design guidelines.
+                </p>
+            </div>
+            <div class="z-10 flex flex-wrap gap-3">
+                <div class="flex items-center gap-2 bg-white/5 px-4 py-2.5 rounded-xl border border-white/10 text-sm">
+                    <span class="material-symbols-outlined text-primary text-lg">palette</span>
+                    <span>Dark Theme</span>
+                </div>
+                <div class="flex items-center gap-2 bg-white/5 px-4 py-2.5 rounded-xl border border-white/10 text-sm">
+                    <span class="material-symbols-outlined text-secondary text-lg">smartphone</span>
+                    <span>Responsive Layouts</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section: Screens List -->
+        <div>
+            <h3 class="text-2xl font-bold text-on-surface mb-6 flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary">layers</span>
+                Available Frontend Screens
+            </h3>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Screen Card 1: SafePassage Map -->
+                <div class="glass-card rounded-xl p-6 flex flex-col justify-between transition-all duration-300 group hover:translate-y-[-4px]">
+                    <div>
+                        <div class="w-12 h-12 rounded-lg bg-secondary/10 border border-secondary/20 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                            <span class="material-symbols-outlined text-secondary text-2xl">map</span>
+                        </div>
+                        <h4 class="text-lg font-bold text-on-surface mb-2 group-hover:text-secondary transition-colors">SafePassage Map</h4>
+                        <p class="text-on-surface-variant text-sm mb-6 leading-relaxed">
+                            A highly detailed overhead map showcasing safe, well-lit pedestrian pathways, destination navigation, and a quick-access Stealth SOS button.
+                        </p>
+                    </div>
+                    <a href="safepassage_map.html" target="_blank" class="w-full py-3 rounded-xl bg-primary/20 hover:bg-primary text-accent hover:text-white border border-primary/30 flex items-center justify-center gap-2 font-semibold transition-all duration-200">
+                        <span>Launch View</span>
+                        <span class="material-symbols-outlined text-sm">open_in_new</span>
+                    </a>
+                </div>
+
+                <!-- Screen Card 2: Report Safety Status -->
+                <div class="glass-card rounded-xl p-6 flex flex-col justify-between transition-all duration-300 group hover:translate-y-[-4px]">
+                    <div>
+                        <div class="w-12 h-12 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                            <span class="material-symbols-outlined text-primary text-2xl">campaign</span>
+                        </div>
+                        <h4 class="text-lg font-bold text-on-surface mb-2 group-hover:text-primary transition-colors">Report Safety Status</h4>
+                        <p class="text-on-surface-variant text-sm mb-6 leading-relaxed">
+                            Bento-style reporting sheet overlay allowing users to instantly select and submit local safety conditions (Poorly Lit, Suspicious Crowd, Safe & Busy).
+                        </p>
+                    </div>
+                    <a href="report_safety_status.html" target="_blank" class="w-full py-3 rounded-xl bg-primary/20 hover:bg-primary text-accent hover:text-white border border-primary/30 flex items-center justify-center gap-2 font-semibold transition-all duration-200">
+                        <span>Launch View</span>
+                        <span class="material-symbols-outlined text-sm">open_in_new</span>
+                    </a>
+                </div>
+
+                <!-- Screen Card 3: Emergency Broadcast -->
+                <div class="glass-card rounded-xl p-6 flex flex-col justify-between transition-all duration-300 group hover:translate-y-[-4px]">
+                    <div>
+                        <div class="w-12 h-12 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                            <span class="material-symbols-outlined text-accent text-2xl">sensors</span>
+                        </div>
+                        <h4 class="text-lg font-bold text-on-surface mb-2 group-hover:text-accent transition-colors">Emergency Broadcast</h4>
+                        <p class="text-on-surface-variant text-sm mb-6 leading-relaxed">
+                            Active streaming view displaying real-time audio and GPS broadcasting indicators, timeline protocol logs, and a long-press deactivation button.
+                        </p>
+                    </div>
+                    <a href="emergency_broadcast.html" target="_blank" class="w-full py-3 rounded-xl bg-primary/20 hover:bg-primary text-accent hover:text-white border border-primary/30 flex items-center justify-center gap-2 font-semibold transition-all duration-200">
+                        <span>Launch View</span>
+                        <span class="material-symbols-outlined text-sm">open_in_new</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Design system specs -->
+        <div class="glass-card rounded-2xl p-8">
+            <h3 class="text-xl font-bold text-on-surface mb-4 flex items-center gap-2">
+                <span class="material-symbols-outlined text-secondary">tune</span>
+                Design Theme Details ("Empowered Calm")
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 text-sm text-on-surface-variant">
+                <div class="bg-white/5 p-4 rounded-xl border border-white/5">
+                    <span class="block text-xs uppercase tracking-wider text-on-surface-variant/50 mb-1">Color Scheme</span>
+                    <span class="font-semibold text-on-surface">Dark Mode Only</span>
+                </div>
+                <div class="bg-white/5 p-4 rounded-xl border border-white/5">
+                    <span class="block text-xs uppercase tracking-wider text-on-surface-variant/50 mb-1">Primary Color</span>
+                    <span class="font-semibold text-on-surface flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-[#6366f1]"></span>#6366f1</span>
+                </div>
+                <div class="bg-white/5 p-4 rounded-xl border border-white/5">
+                    <span class="block text-xs uppercase tracking-wider text-on-surface-variant/50 mb-1">Secondary Color</span>
+                    <span class="font-semibold text-on-surface flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-[#4edea3]"></span>#4edea3</span>
+                </div>
+                <div class="bg-white/5 p-4 rounded-xl border border-white/5">
+                    <span class="block text-xs uppercase tracking-wider text-on-surface-variant/50 mb-1">Font Family</span>
+                    <span class="font-semibold text-on-surface">Inter</span>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="w-full border-t border-white/5 py-6 text-center text-xs text-on-surface-variant/40">
+        <p>&copy; 2026 Guardian Path Navigator. Built with Stitch & Antigravity.</p>
+    </footer>
+</body>
+</html>

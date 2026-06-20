@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+                  "surface-bright": "#31394d",
+                  "surface-container-highest": "#2d3449",
+                  "surface-container-low": "#131b2e",
+                  "secondary-fixed-dim": "#4edea3",
+                  "on-tertiary-fixed-variant": "#39485a",
+                  "on-tertiary": "#233143",
+                  "surface-container-lowest": "#060e20",
+                  "on-error-container": "#ffdad6",
+                  "on-tertiary-container": "#1c2b3c",
+                  "secondary-container": "#00a572",
+                  "surface-container-high": "#222a3d",
+                  "on-primary-fixed-variant": "#2f2ebe",
+                  "on-error": "#690005",
+                  "outline-variant": "#464554",
+                  "on-secondary-fixed-variant": "#005236",
+                  "inverse-primary": "#494bd6",
+                  "on-primary-fixed": "#07006c",
+                  "background": "#0b1326",
+                  "surface": "#0b1326",
+                  "secondary-fixed": "#6ffbbe",
+                  "outline": "#908fa0",
+                  "on-surface": "#dae2fd",
+                  "error-container": "#93000a",
+                  "surface-tint": "#c0c1ff",
+                  "tertiary-fixed": "#d4e4fa",
+                  "on-surface-variant": "#c7c4d7",
+                  "tertiary-fixed-dim": "#b9c8de",
+                  "primary-container": "#8083ff",
+                  "primary": "#c0c1ff",
+                  "inverse-surface": "#dae2fd",
+                  "error": "#ffb4ab",
+                  "secondary": "#4edea3",
+                  "primary-fixed-dim": "#c0c1ff",
+                  "tertiary-container": "#8392a6",
+                  "surface-dim": "#0b1326",
+                  "tertiary": "#b9c8de",
+                  "surface-variant": "#2d3449",
+                  "on-secondary": "#003824",
+                  "primary-fixed": "#e1e0ff",
+                  "surface-container": "#171f33",
+                  "on-background": "#dae2fd",
+                  "on-secondary-container": "#00311f",
+                  "on-tertiary-fixed": "#0d1c2d",
+                  "on-primary": "#1000a9",
+                  "inverse-on-surface": "#283044",
+                  "on-primary-container": "#0d0096",
+                  "on-secondary-fixed": "#002113"
+          },
+          "borderRadius": {
+                  "DEFAULT": "1rem",
+                  "lg": "2rem",
+                  "xl": "3rem",
+                  "full": "9999px"
+          },
+          "spacing": {
+                  "lg": "24px",
+                  "gutter-mobile": "16px",
+                  "sm": "12px",
+                  "xxl": "48px",
+                  "base": "4px",
+                  "xs": "8px",
+                  "xl": "32px",
+                  "margin-mobile": "20px",
+                  "md": "16px"
+          },
+          "fontFamily": {
+                  "label-md": ["Inter"],
+                  "headline-md": ["Inter"],
+                  "label-lg": ["Inter"],
+                  "body-lg": ["Inter"],
+                  "display-lg": ["Inter"],
+                  "headline-lg": ["Inter"],
+                  "body-md": ["Inter"]
+          },
+          "fontSize": {
+                  "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "500"}],
+                  "headline-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                  "label-lg": ["14px", {"lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "600"}],
+                  "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                  "display-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                  "headline-lg": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                  "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}]
+          }
+        },
+      },
+    }
+  </script>
+<style>
+    body { background-color: #0b1326; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+    .glass-card { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(12px); border-top: 1px solid rgba(255, 255, 255, 0.1); }
+    .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+    .active-tag { background: rgba(192, 193, 255, 0.2); border-color: #c0c1ff; }
+    .pulse-animation { animation: pulse 2s infinite; }
+    @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4); } 70% { box-shadow: 0 0 0 15px rgba(99, 102, 241, 0); } 100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0); } }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="overflow-hidden">
+<!-- Map Background -->
+<div class="fixed inset-0 z-0">
+<div class="w-full h-full bg-surface-container-lowest" data-location="London" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuA31HcXYdwpCY0ITbDnrsPNC9bSbAAinN7aabAZ3kP7JyIEPT09yWGYCtABeBUQthF24K6qDR3LMdaKyEuVR0L852GAxa8--iIx6ZbxOsDDi1k7Hz3C89hp4zYG2PwaltBR_48hR77CXjh_CUykBrt1-rXH_-NoQEfY9owu9ZlsNFF6p6mJI4fQ0Elq7BuaLoaoRUwdGawIqTAYcS3XyCf-2So4jAZj0CtBqnDucdlRgifuNDHEIFGg-kd3q3ByeWt-YfdwX_c9kRs'); background-size: cover; background-position: center; filter: grayscale(40%) contrast(110%) brightness(0.4);"></div>
+<!-- Map Markers (Decorative) -->
+<div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+<div class="w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center pulse-animation">
+<div class="w-4 h-4 bg-primary rounded-full border-2 border-on-primary"></div>
+</div>
+</div>
+</div>
+<!-- Top App Bar -->
+<header class="fixed top-0 w-full z-50 bg-surface-container-low/80 backdrop-blur-xl border-b border-outline-variant/10 shadow-sm shadow-primary/5 flex justify-between items-center px-gutter-mobile h-14">
+<div class="flex items-center gap-xs">
+<button class="p-xs hover:bg-surface-bright/20 transition-colors rounded-full active:scale-95 duration-200">
+<span class="material-symbols-outlined text-primary">menu</span>
+</button>
+<h1 class="font-headline-lg text-headline-lg font-bold text-primary">SafePassage</h1><span class="text-label-md font-label-md text-on-surface-variant/60 ml-xs hidden sm:inline-block">[SIMULATION MODE] - No real tracking or payments</span>
+</div>
+<button class="p-xs hover:bg-surface-bright/20 transition-colors rounded-full active:scale-95 duration-200">
+<span class="material-symbols-outlined text-primary">account_circle</span>
+</button>
+</header>
+<!-- Overlay Backdrop -->
+<div class="fixed inset-0 bg-surface-container-lowest/60 backdrop-blur-sm z-40 flex items-end md:items-center justify-center p-gutter-mobile transition-opacity duration-300" id="overlay-backdrop">
+<!-- Report Sheet (Bento-style layout for mobile accessibility) -->
+<div class="glass-card w-full max-w-md rounded-lg shadow-xl shadow-surface-container-lowest overflow-hidden translate-y-0 transition-transform duration-500 ease-out">
+<!-- Drag Handle (Mobile context) -->
+<div class="flex justify-center py-base md:hidden">
+<div class="w-10 h-1 bg-outline-variant/30 rounded-full"></div>
+</div>
+<div class="p-lg">
+<div class="mb-lg">
+<h2 class="font-headline-md text-headline-md text-on-surface mb-xs">Safety Update</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">How's the environment in your current location? Your report helps others stay safe.</p>
+</div>
+<!-- Status Tag Grid -->
+<div class="grid grid-cols-1 gap-md mb-xl">
+<!-- Safe & Busy -->
+<button class="tag-button flex items-center justify-between p-md rounded-DEFAULT border border-outline-variant/20 bg-surface-variant/20 hover:bg-surface-variant/40 transition-all active:scale-[0.98]" onclick="toggleTag(this)">
+<div class="flex items-center gap-md">
+<div class="w-10 h-10 rounded-full bg-secondary/10 flex items-center justify-center">
+<span class="material-symbols-outlined text-secondary" style="font-variation-settings: 'FILL' 1;">verified_user</span>
+</div>
+<span class="font-label-lg text-label-lg text-on-surface">Safe &amp; Busy</span>
+</div>
+<div class="w-6 h-6 rounded-full border-2 border-outline-variant/40 flex items-center justify-center checkbox"></div>
+</button>
+<!-- Poorly Lit -->
+<button class="tag-button flex items-center justify-between p-md rounded-DEFAULT border border-outline-variant/20 bg-surface-variant/20 hover:bg-surface-variant/40 transition-all active:scale-[0.98]" onclick="toggleTag(this)">
+<div class="flex items-center gap-md">
+<div class="w-10 h-10 rounded-full bg-error-container/20 flex items-center justify-center">
+<span class="material-symbols-outlined text-error">wb_twilight</span>
+</div>
+<span class="font-label-lg text-label-lg text-on-surface">Poorly Lit</span>
+</div>
+<div class="w-6 h-6 rounded-full border-2 border-outline-variant/40 flex items-center justify-center checkbox"></div>
+</button>
+<!-- Suspicious Crowd -->
+<button class="tag-button flex items-center justify-between p-md rounded-DEFAULT border border-outline-variant/20 bg-surface-variant/20 hover:bg-surface-variant/40 transition-all active:scale-[0.98]" onclick="toggleTag(this)">
+<div class="flex items-center gap-md">
+<div class="w-10 h-10 rounded-full bg-surface-bright/40 flex items-center justify-center">
+<span class="material-symbols-outlined text-on-surface-variant">groups_2</span>
+</div>
+<span class="font-label-lg text-label-lg text-on-surface">Suspicious Crowd</span>
+</div>
+<div class="w-6 h-6 rounded-full border-2 border-outline-variant/40 flex items-center justify-center checkbox"></div>
+</button>
+</div>
+<!-- CTA Action -->
+<div class="flex flex-col gap-md">
+<button class="w-full h-14 rounded-full bg-primary flex items-center justify-center gap-sm shadow-lg shadow-primary/20 hover:opacity-90 active:scale-[0.97] transition-all group">
+<span class="material-symbols-outlined text-on-primary" style="font-variation-settings: 'FILL' 1;">location_on</span>
+<span class="font-label-lg text-label-lg text-on-primary uppercase tracking-wider">Drop Safety Pin</span>
+</button>
+<button class="w-full py-md font-label-lg text-label-lg text-on-surface-variant hover:text-on-surface transition-colors" onclick="closeOverlay()">
+            Cancel
+          </button>
+</div>
+</div>
+</div>
+</div>
+<!-- Bottom Navigation Bar -->
+<button class="fixed bottom-24 right-gutter-mobile z-50 w-14 h-14 rounded-full bg-primary/20 backdrop-blur-md border border-primary/30 flex items-center justify-center shadow-lg shadow-primary/10 active:scale-95 transition-all pulse-animation group">
+<span class="material-symbols-outlined text-primary text-[32px]" style="font-variation-settings: 'FILL' 1;">shield</span>
+<span class="absolute -top-8 right-0 bg-surface-container-highest text-on-surface text-[10px] px-2 py-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">STEALTH SOS</span>
+</button><nav class="fixed bottom-0 w-full z-50 rounded-t-lg bg-surface-container-low/90 backdrop-blur-xl border-t border-outline-variant/5 shadow-[0_-4px_24px_rgba(99,102,241,0.1)] flex justify-around items-center h-20 px-4 pb-safe md:hidden">
+<div class="flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-full px-5 py-1 active:scale-90 transition-transform duration-150">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">map</span>
+<span class="font-label-md text-label-md">Map</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant hover:text-on-surface active:scale-90 transition-transform duration-150">
+<span class="material-symbols-outlined">group</span>
+<span class="font-label-md text-label-md">Contacts</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant hover:text-on-surface active:scale-90 transition-transform duration-150">
+<span class="material-symbols-outlined">assignment</span>
+<span class="font-label-md text-label-md">Reports</span>
+</div>
+</nav>
+<script>
+    function toggleTag(button) {
+      const checkbox = button.querySelector('.checkbox');
+      const allButtons = document.querySelectorAll('.tag-button');
+      
+      // Toggle logic
+      if (button.classList.contains('active-tag')) {
+        button.classList.remove('active-tag', 'border-primary', 'bg-primary/10');
+        checkbox.innerHTML = '';
+        checkbox.classList.remove('bg-primary', 'border-primary');
+      } else {
+        // Optional: Single select logic
+        allButtons.forEach(btn => {
+          btn.classList.remove('active-tag', 'border-primary', 'bg-primary/10');
+          btn.querySelector('.checkbox').innerHTML = '';
+          btn.querySelector('.checkbox').classList.remove('bg-primary', 'border-primary');
+        });
+
+        button.classList.add('active-tag', 'border-primary', 'bg-primary/10');
+        checkbox.innerHTML = '<span class="material-symbols-outlined text-on-primary text-[16px]" style="font-variation-settings: \'wght\' 700;">check</span>';
+        checkbox.classList.add('bg-primary', 'border-primary');
+      }
+    }
+
+    function closeOverlay() {
+      const backdrop = document.getElementById('overlay-backdrop');
+      const sheet = backdrop.querySelector('.glass-card');
+      
+      sheet.style.transform = 'translateY(100%)';
+      backdrop.style.opacity = '0';
+      
+      setTimeout(() => {
+        backdrop.style.display = 'none';
+      }, 300);
+    }
+    
+    // Smooth Entry
+    document.addEventListener('DOMContentLoaded', () => {
+       const sheet = document.querySelector('.glass-card');
+       sheet.style.transform = 'translateY(100%)';
+       setTimeout(() => {
+         sheet.style.transition = 'transform 0.6s cubic-bezier(0.16, 1, 0.3, 1)';
+         sheet.style.transform = 'translateY(0)';
+       }, 100);
+    });
+  </script>
+</body></html>

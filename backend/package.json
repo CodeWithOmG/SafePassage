@@ -1,0 +1,13 @@
+{
+  "name": "safepassage-backend",
+  "version": "1.0.0",
+  "description": "Mock safety location database and backend for SafePassage App",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2"
+  }
+}
