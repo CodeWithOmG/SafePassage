@@ -285,6 +285,37 @@ class _MapScreenState extends State<MapScreen> {
     }
   }
 
+  void _resetMapState() {
+    _searchController.clear();
+    _originController.clear();
+    setState(() {
+      _routes = [];
+      _selectedRouteIndex = 0;
+      _distanceText = '';
+      _timeText = '';
+      _hasRoute = false;
+      _showDirections = false;
+      _activeLocationName = '';
+      _safePoints = [];
+      _unsafeZones = [];
+      _originLatitude = _userLatitude;
+      _originLongitude = _userLongitude;
+      _originName = 'Current Location';
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      try {
+        _mapController.move(LatLng(_userLatitude, _userLongitude), 15.0);
+      } catch (_) {}
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Search cleared. Ready for a new route.'),
+        duration: Duration(seconds: 2),
+        backgroundColor: Color(0xFF6366F1),
+      ),
+    );
+  }
+
   void _triggerNotification(String text) {
     setState(() {
       _notificationText = text;
@@ -749,7 +780,7 @@ class _MapScreenState extends State<MapScreen> {
     try {
       String geocodeParams = 'q=${Uri.encodeComponent(query.trim())}';
       if (nearLat != null && nearLon != null) {
-        geocodeParams += '&lat=${nearLat.toStringAsFixed(6)}&lon=${nearLon.toStringAsFixed(6)}&radius=0.3';
+        geocodeParams += '&lat=${nearLat.toStringAsFixed(6)}&lon=${nearLon.toStringAsFixed(6)}&radius=0.8';
       }
       final uri = Uri.parse('$_backendUrl/api/geocode?$geocodeParams');
       final response = await http.get(uri);
@@ -758,10 +789,7 @@ class _MapScreenState extends State<MapScreen> {
         final lat = (data['lat'] as num?)?.toDouble();
         final lon = (data['lon'] as num?)?.toDouble();
         final source = data['source'] as String?;
-        if (lat != null && lon != null && source != 'fallback') {
-          return [lat, lon];
-        }
-        if (lat != null && lon != null && nearLat == null) {
+        if (lat != null && lon != null && source == 'nominatim') {
           return [lat, lon];
         }
       }
@@ -976,7 +1004,8 @@ class _MapScreenState extends State<MapScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
-            onPressed: _initializeLocation,
+            tooltip: 'Reset Search',
+            onPressed: _resetMapState,
           )
         ],
       ),

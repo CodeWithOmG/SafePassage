@@ -50,57 +50,108 @@ async function geocode(query, options = {}) {
   }
   const cleanQuery = query.trim();
   const { lat, lon, radius = 0.5 } = options;
-  try {
-    const https = require('https');
-    let nominatimUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(cleanQuery)}&limit=3`;
 
-    if (lat !== undefined && lon !== undefined) {
+  const buildNominatimUrl = (q, extraParams = '', bounded = false) => {
+    let url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&limit=5&addressdetails=1${extraParams}`;
+    if (bounded && lat !== undefined && lon !== undefined) {
       const minLon = (parseFloat(lon) - radius).toFixed(6);
       const maxLat = (parseFloat(lat) + radius).toFixed(6);
       const maxLon = (parseFloat(lon) + radius).toFixed(6);
       const minLat = (parseFloat(lat) - radius).toFixed(6);
-      nominatimUrl += `&viewbox=${minLon},${maxLat},${maxLon},${minLat}&bounded=1`;
+      url += `&viewbox=${minLon},${maxLat},${maxLon},${minLat}&bounded=1`;
     }
+    return url;
+  };
 
-    const data = await new Promise((resolve, reject) => {
-      const request = https.get(nominatimUrl, {
+  const fetchNominatim = async (url) => {
+    const https = require('https');
+    return new Promise((resolve, reject) => {
+      const request = https.get(url, {
         headers: { 'User-Agent': 'SafePassageHackathonDemoApp/1.0' }
       }, (response) => {
         let body = '';
         response.on('data', chunk => body += chunk);
         response.on('end', () => {
-          try {
-            resolve(JSON.parse(body));
-          } catch (e) {
-            reject(new Error('Failed to parse Nominatim response'));
-          }
+          try { resolve(JSON.parse(body)); } catch (e) { reject(new Error('Failed to parse Nominatim response')); }
         });
       });
       request.on('error', reject);
-      request.setTimeout(8000, () => {
-        request.destroy();
-        reject(new Error('Nominatim request timed out'));
-      });
+      request.setTimeout(8000, () => { request.destroy(); reject(new Error('Nominatim request timed out')); });
     });
+  };
 
-    if (Array.isArray(data) && data.length > 0) {
-      return {
-        lat: parseFloat(data[0].lat),
-        lon: parseFloat(data[0].lon),
-        display_name: data[0].display_name || cleanQuery,
-        source: 'nominatim',
-      };
+  const toResult = (item) => ({
+    lat: parseFloat(item.lat),
+    lon: parseFloat(item.lon),
+    display_name: item.display_name || cleanQuery,
+    source: 'nominatim',
+  });
+
+  const poiStrategies = [
+    { keywords: ['police', 'thana', 'chowki', 'station'], extraParams: '&amenity=police' },
+    { keywords: ['market', 'bazaar', 'bazar', 'haat', 'mandi'], extraParams: '&amenity=marketplace' },
+    { keywords: ['mall', 'plaza', 'shopping'], extraParams: '&shop=mall' },
+    { keywords: ['hospital', 'clinic', 'medical'], extraParams: '&amenity=hospital' },
+    { keywords: ['school', 'college', 'university'], extraParams: '&amenity=school' },
+    { keywords: ['bus stand', 'bus station', 'bus stop'], extraParams: '&amenity=bus_station' },
+    { keywords: ['railway', 'train station', 'junction'], extraParams: '&railway=station' },
+  ];
+
+  const lowerQuery = cleanQuery.toLowerCase();
+  let matchedStrategy = null;
+  for (const strategy of poiStrategies) {
+    if (strategy.keywords.some(kw => lowerQuery.includes(kw))) {
+      matchedStrategy = strategy;
+      break;
     }
-    
-    // If bounded search failed and we were using bounds, retry without bounds
+  }
+
+  try {
     if (lat !== undefined && lon !== undefined) {
-      return await geocode(query, {});
+      const boundedUrl = buildNominatimUrl(cleanQuery, '', true);
+      const boundedData = await fetchNominatim(boundedUrl);
+      if (Array.isArray(boundedData) && boundedData.length > 0) {
+        return toResult(boundedData[0]);
+      }
+
+      if (matchedStrategy) {
+        const poiBoundedUrl = buildNominatimUrl(cleanQuery, matchedStrategy.extraParams, true);
+        const poiBoundedData = await fetchNominatim(poiBoundedUrl);
+        if (Array.isArray(poiBoundedData) && poiBoundedData.length > 0) {
+          return toResult(poiBoundedData[0]);
+        }
+
+        const poiUnboundedUrl = buildNominatimUrl(cleanQuery, matchedStrategy.extraParams, false);
+        const poiUnboundedData = await fetchNominatim(poiUnboundedUrl);
+        if (Array.isArray(poiUnboundedData) && poiUnboundedData.length > 0) {
+          return toResult(poiUnboundedData[0]);
+        }
+      }
+
+      const unboundedUrl = buildNominatimUrl(cleanQuery, '', false);
+      const unboundedData = await fetchNominatim(unboundedUrl);
+      if (Array.isArray(unboundedData) && unboundedData.length > 0) {
+        return toResult(unboundedData[0]);
+      }
+    } else {
+      if (matchedStrategy) {
+        const poiUrl = buildNominatimUrl(cleanQuery, matchedStrategy.extraParams, false);
+        const poiData = await fetchNominatim(poiUrl);
+        if (Array.isArray(poiData) && poiData.length > 0) {
+          return toResult(poiData[0]);
+        }
+      }
+
+      const generalUrl = buildNominatimUrl(cleanQuery, '', false);
+      const generalData = await fetchNominatim(generalUrl);
+      if (Array.isArray(generalData) && generalData.length > 0) {
+        return toResult(generalData[0]);
+      }
     }
   } catch (err) {
     console.error('Geocode helper error:', err.message);
   }
 
-  // Fallback to deterministic hash coordinates
   const coords = getLocationCenter(cleanQuery);
   return {
     lat: coords.latitude,
