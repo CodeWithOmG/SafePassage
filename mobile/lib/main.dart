@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:math' show cos, asin, sqrt, Random;
@@ -192,7 +193,9 @@ class _MapScreenState extends State<MapScreen> {
   @override
   void initState() {
     super.initState();
-    _initializeLocation();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _initializeLocation();
+    });
   }
 
   @override
@@ -208,9 +211,11 @@ class _MapScreenState extends State<MapScreen> {
       _isLoading = true;
     });
     try {
-      bool serviceEnabled = await Geolocator.isLocationServiceEnabled().timeout(const Duration(seconds: 2));
-      if (!serviceEnabled) {
-        throw Exception();
+      if (!kIsWeb) {
+        bool serviceEnabled = await Geolocator.isLocationServiceEnabled().timeout(const Duration(seconds: 2));
+        if (!serviceEnabled) {
+          throw Exception();
+        }
       }
       LocationPermission permission = await Geolocator.checkPermission().timeout(const Duration(seconds: 2));
       if (permission == LocationPermission.denied) {
