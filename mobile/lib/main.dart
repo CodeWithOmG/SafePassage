@@ -593,11 +593,11 @@ class _MapScreenState extends State<MapScreen> {
         _originName = origin.isEmpty ? 'Current Location' : origin;
       });
       final rawDirectDist = _getDistanceInMiles(_originLatitude, _originLongitude, _activeLatitude, _activeLongitude);
-      if (rawDirectDist > 150.0) {
+      if (rawDirectDist > 500.0) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Location not found locally. Please search for a nearby place.'),
+              content: Text('Destination seems too far. Please check the location name and try again.'),
               duration: Duration(seconds: 4),
               backgroundColor: Color(0xFFEF4444),
             ),
