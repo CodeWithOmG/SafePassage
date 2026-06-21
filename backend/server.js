@@ -44,17 +44,26 @@ function getLocationCenter(name) {
 }
 
 // Helper to perform geocoding using Nominatim with fallback
-async function geocode(query) {
+async function geocode(query, options = {}) {
   if (!query || query.trim() === '') {
     return null;
   }
   const cleanQuery = query.trim();
+  const { lat, lon, radius = 0.5 } = options;
   try {
     const https = require('https');
-    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(cleanQuery)}&limit=1`;
+    let nominatimUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(cleanQuery)}&limit=3`;
+
+    if (lat !== undefined && lon !== undefined) {
+      const minLon = (parseFloat(lon) - radius).toFixed(6);
+      const maxLat = (parseFloat(lat) + radius).toFixed(6);
+      const maxLon = (parseFloat(lon) + radius).toFixed(6);
+      const minLat = (parseFloat(lat) - radius).toFixed(6);
+      nominatimUrl += `&viewbox=${minLon},${maxLat},${maxLon},${minLat}&bounded=1`;
+    }
 
     const data = await new Promise((resolve, reject) => {
-      const request = https.get(url, {
+      const request = https.get(nominatimUrl, {
         headers: { 'User-Agent': 'SafePassageHackathonDemoApp/1.0' }
       }, (response) => {
         let body = '';
@@ -81,6 +90,11 @@ async function geocode(query) {
         display_name: data[0].display_name || cleanQuery,
         source: 'nominatim',
       };
+    }
+    
+    // If bounded search failed and we were using bounds, retry without bounds
+    if (lat !== undefined && lon !== undefined) {
+      return await geocode(query, {});
     }
   } catch (err) {
     console.error('Geocode helper error:', err.message);
@@ -305,7 +319,23 @@ app.get('/api/geocode', async (req, res) => {
   if (!query || query.trim() === '') {
     return res.status(400).json({ error: 'Query parameter "q" is required.' });
   }
-  const result = await geocode(query);
+  const nearLat = req.query.lat ? parseFloat(req.query.lat) : undefined;
+  const nearLon = req.query.lon ? parseFloat(req.query.lon) : undefined;
+  const radius = req.query.radius ? parseFloat(req.query.radius) : 0.5;
+
+  let result;
+  if (nearLat !== undefined && nearLon !== undefined) {
+    result = await geocode(query, { lat: nearLat, lon: nearLon, radius });
+    if (!result || result.source === 'fallback') {
+      const unbounded = await geocode(query);
+      if (unbounded && unbounded.source === 'nominatim') {
+        result = unbounded;
+      }
+    }
+  } else {
+    result = await geocode(query);
+  }
+
   res.json(result);
 });
 
