@@ -937,27 +937,20 @@ class _MapScreenState extends State<MapScreen> {
       markers.add(
         Marker(
           point: LatLng(lat, lng),
-          width: 140,
-          height: 60,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF171F33),
-                  borderRadius: BorderRadius.circular(6),
-                  border: Border.all(color: const Color(0xFF4EDEA3), width: 1),
+          width: 32,
+          height: 32,
+          child: GestureDetector(
+            onTap: () {
+              ScaffoldMessenger.of(context).clearSnackBars();
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(point['name'] ?? 'Safe Point'),
+                  backgroundColor: const Color(0xFF171F33),
+                  duration: const Duration(seconds: 2),
                 ),
-                child: Text(
-                  point['name'] ?? 'Safe Point',
-                  style: const TextStyle(fontSize: 8, color: Colors.white, fontWeight: FontWeight.bold),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              const SizedBox(height: 2),
-              const Icon(Icons.check_circle, color: Color(0xFF4EDEA3), size: 18),
-            ],
+              );
+            },
+            child: const Icon(Icons.check_circle, color: Color(0xFF4EDEA3), size: 20),
           ),
         ),
       );
@@ -969,27 +962,20 @@ class _MapScreenState extends State<MapScreen> {
       markers.add(
         Marker(
           point: LatLng(lat, lng),
-          width: 140,
-          height: 60,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF171F33),
-                  borderRadius: BorderRadius.circular(6),
-                  border: Border.all(color: const Color(0xFFFFB4AB), width: 1),
+          width: 32,
+          height: 32,
+          child: GestureDetector(
+            onTap: () {
+              ScaffoldMessenger.of(context).clearSnackBars();
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(zone['name'] ?? 'Unsafe Zone'),
+                  backgroundColor: const Color(0xFF171F33),
+                  duration: const Duration(seconds: 2),
                 ),
-                child: Text(
-                  zone['name'] ?? 'Unsafe Zone',
-                  style: const TextStyle(fontSize: 8, color: Colors.white, fontWeight: FontWeight.bold),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              const SizedBox(height: 2),
-              const Icon(Icons.warning, color: Color(0xFFFFB4AB), size: 18),
-            ],
+              );
+            },
+            child: const Icon(Icons.warning, color: Color(0xFFFFB4AB), size: 20),
           ),
         ),
       );
