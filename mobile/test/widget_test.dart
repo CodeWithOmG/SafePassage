@@ -13,6 +13,7 @@ void main() {
   testWidgets('Counter increments smoke test', (WidgetTester tester) async {
     // Build our app and trigger a frame.
     await tester.pumpWidget(const SafePassageApp());
+    await tester.pump(const Duration(seconds: 5));
 
     // Verify that our app bar text containing SafePassage Map is present.
     expect(find.textContaining('SafePassage Map'), findsOneWidget);
