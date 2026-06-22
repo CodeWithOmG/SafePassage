@@ -106,13 +106,13 @@ async function geocode(query, options = {}) {
   }
 
   const poiStrategies = [
-    { keywords: ['police', 'thana', 'chowki', 'station'], category: 'police', label: 'Police Station', overpassTag: 'node["amenity"="police"]' },
-    { keywords: ['market', 'bazaar', 'bazar', 'haat', 'mandi'], category: 'market', label: 'Market', overpassTag: 'node["amenity"="marketplace"]' },
-    { keywords: ['mall', 'plaza', 'shopping', 'store'], category: 'shop', label: 'Mall', overpassTag: 'node["shop"="mall"]' },
-    { keywords: ['hospital', 'clinic', 'medical'], category: 'hospital', label: 'Hospital', overpassTag: 'node["amenity"="hospital"]' },
-    { keywords: ['school', 'college', 'university'], category: 'school', label: 'School', overpassTag: 'node["amenity"="school"]' },
-    { keywords: ['bus stand', 'bus station', 'bus stop'], category: 'transit', label: 'Bus Station', overpassTag: 'node["amenity"="bus_station"]' },
-    { keywords: ['railway', 'train station', 'junction'], category: 'transit', label: 'Railway Station', overpassTag: 'node["railway"="station"]' },
+    { keywords: ['police', 'thana', 'chowki', 'station', 'stations', 'police station', 'police stations'], category: 'police', label: 'Police Station', overpassTag: 'node["amenity"="police"]' },
+    { keywords: ['market', 'bazaar', 'bazar', 'haat', 'mandi', 'markets', 'bazaars', 'bazars'], category: 'market', label: 'Market', overpassTag: 'node["amenity"="marketplace"]' },
+    { keywords: ['mall', 'plaza', 'shopping', 'store', 'malls', 'plazas', 'stores', 'shop', 'shops'], category: 'shop', label: 'Mall', overpassTag: 'node["shop"="mall"]' },
+    { keywords: ['hospital', 'clinic', 'medical', 'hospitals', 'clinics'], category: 'hospital', label: 'Hospital', overpassTag: 'node["amenity"="hospital"]' },
+    { keywords: ['school', 'college', 'university', 'schools', 'colleges', 'universities'], category: 'school', label: 'School', overpassTag: 'node["amenity"="school"]' },
+    { keywords: ['bus stand', 'bus station', 'bus stop', 'bus stands', 'bus stations', 'bus stops'], category: 'transit', label: 'Bus Station', overpassTag: 'node["amenity"="bus_station"]' },
+    { keywords: ['railway', 'train station', 'junction', 'railways', 'train stations', 'junctions'], category: 'transit', label: 'Railway Station', overpassTag: 'node["railway"="station"]' },
   ];
 
   const lowerQuery = cleanQuery.toLowerCase();
@@ -121,17 +121,20 @@ async function geocode(query, options = {}) {
   for (const strategy of poiStrategies) {
     if (strategy.keywords.some(kw => lowerQuery.includes(kw))) {
       matchedStrategy = strategy;
-      for (const kw of strategy.keywords) {
+      const sortedKws = [...strategy.keywords].sort((a, b) => b.length - a.length);
+      for (const kw of sortedKws) {
         const regex = new RegExp('\\b' + kw + '\\b', 'gi');
         baseQuery = baseQuery.replace(regex, '');
       }
-      baseQuery = baseQuery.replace(/\b(near|in|at|around|of)\b/gi, '');
-      baseQuery = baseQuery.replace(/\s+/g, ' ').trim();
       break;
     }
   }
 
   if (matchedStrategy) {
+    baseQuery = baseQuery.replace(/\b(near|in|at|around|of|me|here|my|location|closest|nearby|stations|hospitals|malls|shops|places)\b/gi, '');
+    baseQuery = baseQuery.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, '');
+    baseQuery = baseQuery.replace(/\s+/g, ' ').trim();
+
     let baseLat = lat;
     let baseLon = lon;
     let locationName = baseQuery;
@@ -144,9 +147,34 @@ async function geocode(query, options = {}) {
           baseLat = parseFloat(baseData[0].lat);
           baseLon = parseFloat(baseData[0].lon);
           locationName = baseData[0].display_name.split(',')[0];
+        } else {
+          baseLat = undefined;
+          baseLon = undefined;
         }
       } catch (e) {
         console.error('Base query geocode error:', e.message);
+        baseLat = undefined;
+        baseLon = undefined;
+      }
+    }
+
+    if (baseLat === undefined || baseLon === undefined) {
+      try {
+        const db = readDatabase();
+        const active = db.simulations[db.active_location];
+        if (active) {
+          baseLat = active.latitude;
+          baseLon = active.longitude;
+          locationName = db.active_location;
+        }
+      } catch (dbErr) {
+        console.error('Error reading simulation coords:', dbErr.message);
+      }
+      
+      if (baseLat === undefined || baseLon === undefined) {
+        baseLat = 28.6139;
+        baseLon = 77.2090;
+        locationName = 'Delhi';
       }
     }
 
