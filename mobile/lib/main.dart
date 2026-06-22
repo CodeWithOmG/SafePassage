@@ -1987,6 +1987,230 @@ class _MapScreenState extends State<MapScreen> {
     return Icons.navigation_outlined;
   }
 
+  Future<void> _showNearMePlaces(String category, String title, IconData categoryIcon, Color categoryColor) async {
+    setState(() {
+      _isLoading = true;
+    });
+    try {
+      final uri = Uri.parse(
+        '$_backendUrl/api/pois?lat=${_currentCenter.latitude.toStringAsFixed(6)}&lon=${_currentCenter.longitude.toStringAsFixed(6)}&radius=3000',
+      );
+      final response = await http.get(uri).timeout(const Duration(seconds: 10));
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        final list = (data['pois'] as List<dynamic>? ?? []);
+        final allPOIs = list.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+        
+        final filteredPOIs = allPOIs.where((poi) {
+          final cat = poi['category'] as String? ?? '';
+          if (category == 'shop') {
+            return cat == 'shop' || cat == 'market';
+          }
+          return cat == category;
+        }).toList();
+
+        setState(() {
+          _poisOnMap = allPOIs;
+          _showPOIs = true;
+          _isLoading = false;
+        });
+
+        if (filteredPOIs.isEmpty) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('No $title found near this location.'),
+                backgroundColor: const Color(0xFF171F33),
+              ),
+            );
+          }
+          return;
+        }
+
+        if (mounted) {
+          await showModalBottomSheet(
+            context: context,
+            backgroundColor: Colors.transparent,
+            isScrollControlled: true,
+            builder: (ctx) => Container(
+              decoration: const BoxDecoration(
+                color: Color(0xFF171F33),
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(24),
+                  topRight: Radius.circular(24),
+                ),
+              ),
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
+              constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.5),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: Colors.white24,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Icon(categoryIcon, color: categoryColor, size: 24),
+                      const SizedBox(width: 10),
+                      Text(
+                        title,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Found ${filteredPOIs.length} place(s) near your current map center.',
+                    style: const TextStyle(color: Colors.white54, fontSize: 12),
+                  ),
+                  const SizedBox(height: 16),
+                  const Divider(color: Colors.white10),
+                  Expanded(
+                    child: ListView.builder(
+                      itemCount: filteredPOIs.length,
+                      itemBuilder: (context, idx) {
+                        final poi = filteredPOIs[idx];
+                        final poiName = poi['name'] as String? ?? 'Place';
+                        final poiLat = (poi['lat'] as num).toDouble();
+                        final poiLon = (poi['lon'] as num).toDouble();
+                        final dist = _getDistanceInMiles(_currentCenter.latitude, _currentCenter.longitude, poiLat, poiLon);
+
+                        return Container(
+                          margin: const EdgeInsets.only(bottom: 12),
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF0B1326),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.white10),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      poiName,
+                                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      '${dist.toStringAsFixed(2)} miles away',
+                                      style: const TextStyle(color: Colors.white54, fontSize: 11),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Row(
+                                children: [
+                                  IconButton(
+                                    icon: const Icon(Icons.location_on, color: Color(0xFF4EDEA3), size: 20),
+                                    onPressed: () {
+                                      Navigator.pop(ctx);
+                                      setState(() {
+                                        _searchController.text = poiName;
+                                        _tappedPoint = null;
+                                        _activeLatitude = poiLat;
+                                        _activeLongitude = poiLon;
+                                        _activeLocationName = poiName;
+                                      });
+                                      _mapController.move(LatLng(poiLat, poiLon), 15.5);
+                                    },
+                                    tooltip: 'Show on Map',
+                                  ),
+                                  ElevatedButton(
+                                    onPressed: () {
+                                      Navigator.pop(ctx);
+                                      setState(() {
+                                        _searchController.text = poiName;
+                                        _activeLatitude = poiLat;
+                                        _activeLongitude = poiLon;
+                                        _tappedPoint = null;
+                                      });
+                                      _startNavigationQuery();
+                                    },
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: const Color(0xFF6366F1),
+                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                      minimumSize: Size.zero,
+                                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                    ),
+                                    child: const Text('Navigate', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      debugPrint('NearMe POI error: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to load nearby places. Check connection.')),
+        );
+      }
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  Widget _buildNearMeChip(IconData icon, String label, Color color, String category) {
+    return GestureDetector(
+      onTap: () => _showNearMePlaces(category, label, icon, color),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.15),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: color.withValues(alpha: 0.4), width: 1),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, color: color, size: 14),
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: TextStyle(
+                color: color,
+                fontSize: 11,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildSearchBar() {
     return Container(
       padding: const EdgeInsets.all(12),
@@ -2060,6 +2284,21 @@ class _MapScreenState extends State<MapScreen> {
                 onPressed: _startNavigationQuery,
               ),
             ],
+          ),
+          const SizedBox(height: 10),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                _buildNearMeChip(Icons.local_hospital, 'Hospitals Near Me', const Color(0xFFEF4444), 'hospital'),
+                const SizedBox(width: 8),
+                _buildNearMeChip(Icons.local_police, 'Police Near Me', const Color(0xFF3B82F6), 'police'),
+                const SizedBox(width: 8),
+                _buildNearMeChip(Icons.storefront, 'Malls Near Me', const Color(0xFFF59E0B), 'shop'),
+                const SizedBox(width: 8),
+                _buildNearMeChip(Icons.star, 'Famous Places', const Color(0xFFA855F7), 'landmark'),
+              ],
+            ),
           ),
         ],
       ),
