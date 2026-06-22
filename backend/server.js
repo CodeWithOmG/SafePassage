@@ -5,7 +5,22 @@ const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const DB_PATH = path.join(__dirname, 'database.json');
+
+// Dynamic database path for Vercel Serverless compatibility
+const isVercel = process.env.VERCEL || process.env.NOW_REGION;
+const DB_PATH = isVercel 
+  ? path.join('/tmp', 'database.json') 
+  : path.join(__dirname, 'database.json');
+
+// Copy initial database.json to /tmp if running in a Vercel serverless function
+if (isVercel && !fs.existsSync(DB_PATH)) {
+  try {
+    const defaultDbContent = fs.readFileSync(path.join(__dirname, 'database.json'), 'utf8');
+    fs.writeFileSync(DB_PATH, defaultDbContent, 'utf8');
+  } catch (err) {
+    console.error('Failed to bootstrap temporary database.json on Vercel:', err);
+  }
+}
 
 app.use(cors());
 app.use(express.json());
@@ -761,3 +776,5 @@ app.listen(PORT, () => {
   console.log(`SafePassage Simulation Backend running on port ${PORT}`);
   console.log(`====================================================`);
 });
+
+module.exports = app;

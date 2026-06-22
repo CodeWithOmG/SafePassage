@@ -12,6 +12,13 @@ void main() {
   runApp(const SafePassageApp());
 }
 
+final String _backendUrl = kIsWeb
+    ? (Uri.base.host == 'localhost' || Uri.base.host == '127.0.0.1'
+        ? 'http://localhost:3000'
+        : '${Uri.base.scheme}://${Uri.base.authority}')
+    : 'http://localhost:3000';
+
+
 class SafePassageApp extends StatelessWidget {
   const SafePassageApp({super.key});
 
@@ -174,7 +181,6 @@ class _MapScreenState extends State<MapScreen> {
   final TextEditingController _searchController = TextEditingController();
   final TextEditingController _originController = TextEditingController();
   final MapController _mapController = MapController();
-  final String _backendUrl = 'http://localhost:3000';
   final Random _random = Random(42);
 
   bool _showNotification = false;
@@ -2329,7 +2335,6 @@ class _ReportScreenState extends State<ReportScreen> {
   String _selectedRisk = 'Safe & Busy';
   bool _isSubmitting = false;
   String _activeLocationName = 'Loading...';
-  final String _backendUrl = 'http://localhost:3000';
 
   final List<Map<String, dynamic>> _riskOptions = [
     {
@@ -2574,7 +2579,6 @@ class TimelineScreen extends StatefulWidget {
 class _TimelineScreenState extends State<TimelineScreen> {
   List<dynamic> _reports = [];
   bool _isLoading = true;
-  final String _backendUrl = 'http://localhost:3000';
 
   @override
   void initState() {
