@@ -6,8 +6,12 @@
       "destination": "/api/index.js"
     },
     {
-      "source": "/:path*",
-      "destination": "/mobile/build/web/:path*"
+      "source": "/",
+      "destination": "/mobile/build/web/index.html"
+    },
+    {
+      "source": "/((?!api/).*)",
+      "destination": "/mobile/build/web/$1"
     }
   ]
 }
