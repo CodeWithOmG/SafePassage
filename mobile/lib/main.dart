@@ -1472,6 +1472,23 @@ class _MapScreenState extends State<MapScreen> {
               child: _buildSearchBar(),
             ),
           ),
+          Positioned(
+            top: 170,
+            right: 16,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _buildNearMeChip(Icons.local_hospital, 'Hospitals Near Me', const Color(0xFFEF4444), 'hospital'),
+                const SizedBox(height: 8),
+                _buildNearMeChip(Icons.local_police, 'Police Near Me', const Color(0xFF3B82F6), 'police'),
+                const SizedBox(height: 8),
+                _buildNearMeChip(Icons.storefront, 'Malls Near Me', const Color(0xFFF59E0B), 'shop'),
+                const SizedBox(height: 8),
+                _buildNearMeChip(Icons.star, 'Famous Places', const Color(0xFFA855F7), 'landmark'),
+              ],
+            ),
+          ),
           if (_hasRoute)
             Positioned(
               top: 80,
@@ -2186,11 +2203,18 @@ class _MapScreenState extends State<MapScreen> {
     return GestureDetector(
       onTap: () => _showNearMePlaces(category, label, icon, color),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.15),
+          color: const Color(0xFF171F33).withValues(alpha: 0.95),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: color.withValues(alpha: 0.4), width: 1),
+          border: Border.all(color: color.withValues(alpha: 0.5), width: 1.2),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.25),
+              blurRadius: 6,
+              offset: const Offset(0, 3),
+            ),
+          ],
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -2284,21 +2308,6 @@ class _MapScreenState extends State<MapScreen> {
                 onPressed: _startNavigationQuery,
               ),
             ],
-          ),
-          const SizedBox(height: 10),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
-                _buildNearMeChip(Icons.local_hospital, 'Hospitals Near Me', const Color(0xFFEF4444), 'hospital'),
-                const SizedBox(width: 8),
-                _buildNearMeChip(Icons.local_police, 'Police Near Me', const Color(0xFF3B82F6), 'police'),
-                const SizedBox(width: 8),
-                _buildNearMeChip(Icons.storefront, 'Malls Near Me', const Color(0xFFF59E0B), 'shop'),
-                const SizedBox(width: 8),
-                _buildNearMeChip(Icons.star, 'Famous Places', const Color(0xFFA855F7), 'landmark'),
-              ],
-            ),
           ),
         ],
       ),
