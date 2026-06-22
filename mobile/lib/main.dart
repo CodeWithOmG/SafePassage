@@ -190,6 +190,13 @@ class _MapScreenState extends State<MapScreen> {
   String _timeText = '';
   bool _hasRoute = false;
 
+  List<Map<String, dynamic>> _poisOnMap = [];
+  bool _showPOIs = false;
+  bool _isFetchingPOIs = false;
+
+  LatLng? _tappedPoint;
+  bool _isReverseGeocoding = false;
+
   @override
   void initState() {
     super.initState();
@@ -988,7 +995,399 @@ class _MapScreenState extends State<MapScreen> {
       );
     }
 
+    if (_tappedPoint != null) {
+      markers.add(
+        Marker(
+          point: _tappedPoint!,
+          width: 44,
+          height: 56,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 28,
+                height: 28,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF6366F1),
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white, width: 2),
+                  boxShadow: [
+                    BoxShadow(color: const Color(0xFF6366F1).withValues(alpha: 0.5), blurRadius: 8, spreadRadius: 2),
+                  ],
+                ),
+                child: const Icon(Icons.place, color: Colors.white, size: 16),
+              ),
+              Container(
+                width: 2,
+                height: 12,
+                color: const Color(0xFF6366F1),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (_showPOIs) {
+      for (final poi in _poisOnMap) {
+        final poiLat = (poi['lat'] as num?)?.toDouble();
+        final poiLon = (poi['lon'] as num?)?.toDouble();
+        if (poiLat == null || poiLon == null) continue;
+        final category = poi['category'] as String? ?? 'other';
+        final poiName = poi['name'] as String? ?? '';
+
+        Color poiColor;
+        IconData poiIcon;
+        switch (category) {
+          case 'police':
+            poiColor = const Color(0xFF3B82F6);
+            poiIcon = Icons.local_police;
+            break;
+          case 'hospital':
+            poiColor = const Color(0xFFEF4444);
+            poiIcon = Icons.local_hospital;
+            break;
+          case 'pharmacy':
+            poiColor = const Color(0xFF10B981);
+            poiIcon = Icons.local_pharmacy;
+            break;
+          case 'market':
+          case 'shop':
+            poiColor = const Color(0xFFF59E0B);
+            poiIcon = Icons.storefront;
+            break;
+          case 'landmark':
+            poiColor = const Color(0xFFA855F7);
+            poiIcon = Icons.star;
+            break;
+          case 'school':
+            poiColor = const Color(0xFF14B8A6);
+            poiIcon = Icons.school;
+            break;
+          case 'fuel':
+            poiColor = const Color(0xFF94A3B8);
+            poiIcon = Icons.local_gas_station;
+            break;
+          case 'bank':
+            poiColor = const Color(0xFFEAB308);
+            poiIcon = Icons.account_balance;
+            break;
+          case 'transit':
+            poiColor = const Color(0xFF06B6D4);
+            poiIcon = Icons.train;
+            break;
+          default:
+            poiColor = const Color(0xFF6366F1);
+            poiIcon = Icons.place;
+        }
+
+        markers.add(
+          Marker(
+            point: LatLng(poiLat, poiLon),
+            width: 120,
+            height: 56,
+            child: GestureDetector(
+              onTap: () {
+                ScaffoldMessenger.of(context).clearSnackBars();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Row(
+                      children: [
+                        Icon(poiIcon, color: poiColor, size: 18),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            poiName,
+                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                            setState(() {
+                              _searchController.text = poiName;
+                              _tappedPoint = null;
+                            });
+                          },
+                          child: const Text('Set Dest', style: TextStyle(color: Color(0xFF4EDEA3), fontSize: 11)),
+                        ),
+                      ],
+                    ),
+                    backgroundColor: const Color(0xFF171F33),
+                    duration: const Duration(seconds: 4),
+                    behavior: SnackBarBehavior.floating,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                );
+              },
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF0B1326).withValues(alpha: 0.88),
+                      borderRadius: BorderRadius.circular(4),
+                      border: Border.all(color: poiColor.withValues(alpha: 0.6), width: 0.8),
+                    ),
+                    child: Text(
+                      poiName.length > 14 ? '${poiName.substring(0, 13)}…' : poiName,
+                      style: TextStyle(fontSize: 7.5, color: poiColor, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Container(
+                    width: 22,
+                    height: 22,
+                    decoration: BoxDecoration(
+                      color: poiColor,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(color: poiColor.withValues(alpha: 0.4), blurRadius: 6, spreadRadius: 1),
+                      ],
+                    ),
+                    child: Icon(poiIcon, color: Colors.white, size: 13),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      }
+    }
+
     return markers;
+  }
+
+  Future<void> _fetchNearbyPOIs() async {
+    if (_isFetchingPOIs) return;
+    setState(() { _isFetchingPOIs = true; });
+    try {
+      final uri = Uri.parse(
+        '$_backendUrl/api/pois?lat=${_currentCenter.latitude.toStringAsFixed(6)}&lon=${_currentCenter.longitude.toStringAsFixed(6)}&radius=1500',
+      );
+      final response = await http.get(uri).timeout(const Duration(seconds: 18));
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        final list = (data['pois'] as List<dynamic>? ?? []);
+        setState(() {
+          _poisOnMap = list.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+        });
+      }
+    } catch (e) {
+      debugPrint('POI fetch error: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Could not load nearby places. Check internet connection.'),
+            backgroundColor: Color(0xFF171F33),
+            duration: Duration(seconds: 3),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() { _isFetchingPOIs = false; });
+    }
+  }
+
+  Future<String> _reverseGeocode(LatLng latlng) async {
+    try {
+      final uri = Uri.parse(
+        '$_backendUrl/api/reverse-geocode?lat=${latlng.latitude.toStringAsFixed(7)}&lon=${latlng.longitude.toStringAsFixed(7)}',
+      );
+      final response = await http.get(uri).timeout(const Duration(seconds: 10));
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        return (data['display_name'] as String? ?? '').isNotEmpty
+            ? data['display_name'] as String
+            : (data['short_name'] as String? ?? 'Unknown Location');
+      }
+    } catch (e) {
+      debugPrint('Reverse geocode error: $e');
+    }
+    return 'Unknown Location';
+  }
+
+  Future<void> _onMapTapped(TapPosition tapPosition, LatLng latlng) async {
+    setState(() {
+      _tappedPoint = latlng;
+      _isReverseGeocoding = true;
+    });
+
+    final address = await _reverseGeocode(latlng);
+    if (!mounted) return;
+
+    setState(() {
+      _isReverseGeocoding = false;
+    });
+
+    final shortAddress = address.split(',').take(2).join(',').trim();
+
+    await showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (ctx) => Container(
+        decoration: const BoxDecoration(
+          color: Color(0xFF171F33),
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(24),
+            topRight: Radius.circular(24),
+          ),
+        ),
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.white24,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF6366F1).withValues(alpha: 0.15),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.place, color: Color(0xFF6366F1), size: 22),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Selected Location',
+                        style: TextStyle(color: Colors.white54, fontSize: 11),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        _isReverseGeocoding ? 'Fetching address…' : shortAddress,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Padding(
+              padding: const EdgeInsets.only(left: 46),
+              child: Text(
+                '${latlng.latitude.toStringAsFixed(5)}, ${latlng.longitude.toStringAsFixed(5)}',
+                style: const TextStyle(color: Colors.white38, fontSize: 11),
+              ),
+            ),
+            const SizedBox(height: 20),
+            const Divider(color: Colors.white10),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () {
+                      Navigator.pop(ctx);
+                      setState(() {
+                        _originController.text = shortAddress;
+                        _originLatitude = latlng.latitude;
+                        _originLongitude = latlng.longitude;
+                        _originName = shortAddress;
+                        _tappedPoint = null;
+                      });
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Origin set from map.'),
+                          backgroundColor: Color(0xFF6366F1),
+                          duration: Duration(seconds: 2),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.radio_button_checked, size: 16),
+                    label: const Text('Set as Origin'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: const Color(0xFF6366F1),
+                      side: const BorderSide(color: Color(0xFF6366F1), width: 1.2),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () {
+                      Navigator.pop(ctx);
+                      setState(() {
+                        _searchController.text = shortAddress;
+                        _tappedPoint = null;
+                      });
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Destination set from map.'),
+                          backgroundColor: Color(0xFF171F33),
+                          duration: Duration(seconds: 2),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.location_on, size: 16),
+                    label: const Text('Set Destination'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: const Color(0xFF4EDEA3),
+                      side: const BorderSide(color: Color(0xFF4EDEA3), width: 1.2),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.pop(ctx);
+                  setState(() {
+                    _searchController.text = shortAddress;
+                    _activeLatitude = latlng.latitude;
+                    _activeLongitude = latlng.longitude;
+                    _tappedPoint = null;
+                  });
+                  _startNavigationQuery();
+                },
+                icon: const Icon(Icons.navigation, size: 18),
+                label: const Text('Navigate Here', style: TextStyle(fontWeight: FontWeight.bold)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF6366F1),
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (mounted) setState(() { _tappedPoint = null; });
   }
 
   @override
@@ -1025,6 +1424,7 @@ class _MapScreenState extends State<MapScreen> {
                         _currentZoom = event.camera.zoom;
                         _currentCenter = event.camera.center;
                       },
+                      onTap: (tapPosition, latlng) => _onMapTapped(tapPosition, latlng),
                     ),
                     children: [
                       TileLayer(
@@ -1142,9 +1542,7 @@ class _MapScreenState extends State<MapScreen> {
                   onTap: () {
                     final newZoom = (_currentZoom + 1.0).clamp(3.0, 18.0);
                     _mapController.move(_currentCenter, newZoom);
-                    setState(() {
-                      _currentZoom = newZoom;
-                    });
+                    setState(() { _currentZoom = newZoom; });
                   },
                 ),
                 const SizedBox(height: 4),
@@ -1153,14 +1551,76 @@ class _MapScreenState extends State<MapScreen> {
                   onTap: () {
                     final newZoom = (_currentZoom - 1.0).clamp(3.0, 18.0);
                     _mapController.move(_currentCenter, newZoom);
-                    setState(() {
-                      _currentZoom = newZoom;
-                    });
+                    setState(() { _currentZoom = newZoom; });
                   },
+                ),
+                const SizedBox(height: 8),
+                GestureDetector(
+                  onTap: () async {
+                    final wasOn = _showPOIs;
+                    setState(() { _showPOIs = !_showPOIs; });
+                    if (!wasOn) {
+                      await _fetchNearbyPOIs();
+                    } else {
+                      setState(() { _poisOnMap = []; });
+                    }
+                  },
+                  child: Container(
+                    width: 42,
+                    height: 42,
+                    decoration: BoxDecoration(
+                      color: _showPOIs
+                          ? const Color(0xFF6366F1).withValues(alpha: 0.85)
+                          : const Color(0xFF171F33).withValues(alpha: 0.92),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: _showPOIs ? const Color(0xFF6366F1) : Colors.white.withValues(alpha: 0.15),
+                        width: 1,
+                      ),
+                      boxShadow: const [
+                        BoxShadow(color: Colors.black38, blurRadius: 8, offset: Offset(0, 3)),
+                      ],
+                    ),
+                    child: _isFetchingPOIs
+                        ? const Padding(
+                            padding: EdgeInsets.all(10),
+                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                          )
+                        : Icon(
+                            Icons.layers,
+                            color: _showPOIs ? Colors.white : Colors.white70,
+                            size: 22,
+                          ),
+                  ),
                 ),
               ],
             ),
           ),
+          if (_showPOIs && _poisOnMap.isNotEmpty)
+            Positioned(
+              bottom: _hasRoute ? 260 : 90,
+              left: 66,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF0B1326).withValues(alpha: 0.92),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: Colors.white10),
+                ),
+                child: Wrap(
+                  spacing: 8,
+                  runSpacing: 4,
+                  children: [
+                    _poiLegendDot(const Color(0xFF3B82F6), 'Police'),
+                    _poiLegendDot(const Color(0xFFEF4444), 'Hospital'),
+                    _poiLegendDot(const Color(0xFFF59E0B), 'Shop'),
+                    _poiLegendDot(const Color(0xFFA855F7), 'Landmark'),
+                    _poiLegendDot(const Color(0xFF14B8A6), 'School'),
+                    _poiLegendDot(const Color(0xFF06B6D4), 'Transit'),
+                  ],
+                ),
+              ),
+            ),
           if (_hasRoute)
             Positioned(
               bottom: 0,
@@ -1603,6 +2063,21 @@ class _MapScreenState extends State<MapScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _poiLegendDot(Color color, String label) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 8,
+          height: 8,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        ),
+        const SizedBox(width: 4),
+        Text(label, style: const TextStyle(color: Colors.white60, fontSize: 9)),
+      ],
     );
   }
 }

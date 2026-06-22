@@ -530,6 +530,149 @@ app.post('/api/reports', (req, res) => {
   });
 });
 
+// GET nearby Points of Interest from OSM Overpass API
+app.get('/api/pois', async (req, res) => {
+  const lat = parseFloat(req.query.lat);
+  const lon = parseFloat(req.query.lon);
+  const radius = parseInt(req.query.radius) || 1500;
+
+  if (isNaN(lat) || isNaN(lon)) {
+    return res.status(400).json({ error: 'lat and lon parameters are required.' });
+  }
+
+  const overpassQuery = `
+    [out:json][timeout:12];
+    (
+      node["amenity"="police"](around:${radius},${lat},${lon});
+      node["amenity"="hospital"](around:${radius},${lat},${lon});
+      node["amenity"="clinic"](around:${radius},${lat},${lon});
+      node["amenity"="marketplace"](around:${radius},${lat},${lon});
+      node["shop"="supermarket"](around:${radius},${lat},${lon});
+      node["shop"="mall"](around:${radius},${lat},${lon});
+      node["tourism"="attraction"](around:${radius},${lat},${lon});
+      node["tourism"="museum"](around:${radius},${lat},${lon});
+      node["amenity"="school"](around:${radius},${lat},${lon});
+      node["amenity"="college"](around:${radius},${lat},${lon});
+      node["amenity"="university"](around:${radius},${lat},${lon});
+      node["amenity"="fuel"](around:${radius},${lat},${lon});
+      node["amenity"="pharmacy"](around:${radius},${lat},${lon});
+      node["amenity"="bank"](around:${radius},${lat},${lon});
+      node["railway"="station"](around:${radius},${lat},${lon});
+      node["amenity"="bus_station"](around:${radius},${lat},${lon});
+    );
+    out body 60;
+  `.trim();
+
+  const getCategoryAndIcon = (tags) => {
+    const amenity = tags.amenity || '';
+    const shop = tags.shop || '';
+    const tourism = tags.tourism || '';
+    const railway = tags.railway || '';
+
+    if (amenity === 'police') return { category: 'police', icon: 'police' };
+    if (amenity === 'hospital' || amenity === 'clinic') return { category: 'hospital', icon: 'hospital' };
+    if (amenity === 'pharmacy') return { category: 'pharmacy', icon: 'pharmacy' };
+    if (amenity === 'marketplace') return { category: 'market', icon: 'market' };
+    if (shop === 'supermarket' || shop === 'mall') return { category: 'shop', icon: 'shop' };
+    if (tourism === 'attraction' || tourism === 'museum') return { category: 'landmark', icon: 'landmark' };
+    if (amenity === 'school' || amenity === 'college' || amenity === 'university') return { category: 'school', icon: 'school' };
+    if (amenity === 'fuel') return { category: 'fuel', icon: 'fuel' };
+    if (amenity === 'bank') return { category: 'bank', icon: 'bank' };
+    if (railway === 'station') return { category: 'transit', icon: 'transit' };
+    if (amenity === 'bus_station') return { category: 'transit', icon: 'transit' };
+    return { category: 'other', icon: 'other' };
+  };
+
+  try {
+    const https = require('https');
+    const encodedQuery = encodeURIComponent(overpassQuery);
+    const overpassUrl = `https://overpass-api.de/api/interpreter?data=${encodedQuery}`;
+
+    const data = await new Promise((resolve, reject) => {
+      const request = https.get(overpassUrl, {
+        headers: { 'User-Agent': 'SafePassageHackathonDemoApp/1.0' }
+      }, (response) => {
+        let body = '';
+        response.on('data', chunk => body += chunk);
+        response.on('end', () => {
+          try { resolve(JSON.parse(body)); } catch (e) { reject(new Error('Failed to parse Overpass response')); }
+        });
+      });
+      request.on('error', reject);
+      request.setTimeout(15000, () => { request.destroy(); reject(new Error('Overpass request timed out')); });
+    });
+
+    const pois = (data.elements || [])
+      .filter(el => el.lat && el.lon)
+      .map(el => {
+        const tags = el.tags || {};
+        const { category, icon } = getCategoryAndIcon(tags);
+        const name = tags.name || tags['name:en'] || category.charAt(0).toUpperCase() + category.slice(1);
+        return {
+          id: `${el.type}-${el.id}`,
+          name,
+          lat: el.lat,
+          lon: el.lon,
+          category,
+          icon,
+          address: [tags['addr:street'], tags['addr:housenumber']].filter(Boolean).join(' ') || '',
+        };
+      })
+      .filter(p => p.name && p.name.length > 1)
+      .slice(0, 60);
+
+    res.json({ pois, count: pois.length });
+  } catch (err) {
+    console.error('POI fetch error:', err.message);
+    res.status(500).json({ error: 'Failed to fetch POIs', pois: [] });
+  }
+});
+
+// GET reverse geocode — convert lat/lon to human-readable address using Nominatim
+app.get('/api/reverse-geocode', async (req, res) => {
+  const lat = parseFloat(req.query.lat);
+  const lon = parseFloat(req.query.lon);
+
+  if (isNaN(lat) || isNaN(lon)) {
+    return res.status(400).json({ error: 'lat and lon parameters are required.' });
+  }
+
+  try {
+    const https = require('https');
+    const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=18&addressdetails=1`;
+
+    const data = await new Promise((resolve, reject) => {
+      const request = https.get(url, {
+        headers: { 'User-Agent': 'SafePassageHackathonDemoApp/1.0' }
+      }, (response) => {
+        let body = '';
+        response.on('data', chunk => body += chunk);
+        response.on('end', () => {
+          try { resolve(JSON.parse(body)); } catch (e) { reject(new Error('Failed to parse reverse geocode response')); }
+        });
+      });
+      request.on('error', reject);
+      request.setTimeout(8000, () => { request.destroy(); reject(new Error('Reverse geocode timed out')); });
+    });
+
+    const address = data.address || {};
+    const shortName = address.road || address.neighbourhood || address.suburb ||
+      address.city_district || address.city || address.town || address.village || 'Unknown Location';
+    const displayName = data.display_name || shortName;
+
+    res.json({
+      lat,
+      lon,
+      short_name: shortName,
+      display_name: displayName,
+      address,
+    });
+  } catch (err) {
+    console.error('Reverse geocode error:', err.message);
+    res.status(500).json({ error: 'Reverse geocode failed', short_name: 'Unknown Location', display_name: '' });
+  }
+});
+
 // Start server
 app.listen(PORT, () => {
   console.log(`====================================================`);
