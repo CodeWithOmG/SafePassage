@@ -770,11 +770,13 @@ app.get('/api/reverse-geocode', async (req, res) => {
   }
 });
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`====================================================`);
-  console.log(`SafePassage Simulation Backend running on port ${PORT}`);
-  console.log(`====================================================`);
-});
+// Start server only if not running in Vercel serverless environment
+if (!isVercel) {
+  app.listen(PORT, () => {
+    console.log(`====================================================`);
+    console.log(`SafePassage Simulation Backend running on port ${PORT}`);
+    console.log(`====================================================`);
+  });
+}
 
 module.exports = app;
